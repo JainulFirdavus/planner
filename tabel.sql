@@ -34,7 +34,7 @@ CREATE TABLE reminders (
 
 );
 
--- Create Reminder users
+-- Create users
 
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
@@ -46,9 +46,9 @@ CREATE TABLE users (
   role VARCHAR(255) DEFAULT 'ADMIN'
   
 );
--- Create Reminder project
+-- Create Reminder projects
 
-CREATE TABLE project (
+CREATE TABLE projects (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) ,
   region VARCHAR(255) ,

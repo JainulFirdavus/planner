@@ -3,9 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '../../lib/db';
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  const { method, body } = req;
-console.log('-----');
-
+  const { method, body } = req; 
   switch (method) {
     case 'GET':
       try {
