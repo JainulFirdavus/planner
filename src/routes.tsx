@@ -27,8 +27,8 @@ const routes: IRoute[] = [
   },
   {
     name: 'Worklist',
-    layout: '/admin',
-    path: '/worklist',
+    layout: '/admin', 
+    path: '/worklist/overview',
     icon: (
       <Icon
         as={MdOutlineShoppingCart}
@@ -38,12 +38,16 @@ const routes: IRoute[] = [
       />
     ),
     secondary: true,
+    nestedItems: [ { name: 'OverView', path: '/worklist/overview', }, { name: 'Todo' , path: '/worklist/todos', },{ name: 'Reminder', path: '/worklist/reminders', } ],
+
   },
   {
     name: 'Settings',
     layout: '/admin',
     icon: <Icon as={MdBarChart} width="20px" height="20px" color="inherit" />,
     path: '/settings',
+    // secondary: true,
+    // nestedItems: [ { name: 'OverView', path: '/general', }, { name: 'Project 2', path: '/projects/2', }, ],
   },
   /* {
     name: 'Profile',

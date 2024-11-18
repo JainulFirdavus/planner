@@ -3,12 +3,12 @@
 -- Create To-Do Table
 CREATE TABLE todos (
   id SERIAL PRIMARY KEY,
-  users INTEGER REFERENCES users(id) ON DELETE CASCADE
+  users INTEGER REFERENCES users(id) ON DELETE CASCADE,
   title VARCHAR(255) NOT NULL,
   description TEXT,
   priority INTEGER,
-  project INTEGER REFERENCES project(id) ON DELETE CASCADE,
-  project TEXT,
+  projects INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+  projectName TEXT,
   category TEXT,
   dueDate TIMESTAMPTZ,
   createdAT TIMESTAMPTZ,
@@ -28,7 +28,6 @@ CREATE TABLE reminders (
   reminder_time TIMESTAMPTZ NOT NULL,
   notified BOOLEAN DEFAULT FALSE,
   repeat INTEGER,
-  soz
   category TEXT,
   completed BOOLEAN DEFAULT FALSE
 
@@ -42,7 +41,7 @@ CREATE TABLE users (
   email VARCHAR(255),
   phone VARCHAR(255),
   status BOOLEAN DEFAULT TRUE,
-  createdAT TIMESTAMPTZ
+  createdAT TIMESTAMPTZ,
   role VARCHAR(255) DEFAULT 'ADMIN'
   
 );

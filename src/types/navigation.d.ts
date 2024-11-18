@@ -5,5 +5,6 @@ export interface IRoute {
   layout: string; 
   icon: ReactComponentElement | string;
   secondary?: boolean;
-  path: string;
+  path?: string;
+  nestedItems?: MenuItem[];
 }
