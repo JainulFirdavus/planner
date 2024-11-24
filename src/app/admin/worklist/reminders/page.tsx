@@ -1,293 +1,220 @@
+// pages/reminders.tsx
+
 'use client';
 
+import React, { useState, useEffect } from 'react';
+import { Box, Grid, Button, Flex, useColorModeValue, useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Input, Select, Textarea } from '@chakra-ui/react';
+import MiniStatistics from './components/MiniStatistics';
+import SimpleGridComponent from './components/SimpleGrid';
+import ReminderList from './components/ReminderList';
+import { Reminder } from './types';
 
-import React from 'react';
-
-// Chakra imports
-import {
-  Box,
-  Button,
-  Flex,
-  Grid,
-  Text,
-  useColorModeValue,
-  SimpleGrid,
-  Link,
-} from '@chakra-ui/react';
-
-// Custom components
-import TableTopCreators from 'views/admin/marketplace/components/TableTopCreators';
-import HistoryItem from 'views/admin/marketplace/components/HistoryItem';
-import NFT from 'components/card/NFT';
-import Card from 'components/card/Card';
-import tableDataTopCreators from 'views/admin/marketplace/variables/tableDataTopCreators';
-
-// Assets
-import Nft1 from 'img/nfts/Nft1.png';
-import Nft2 from 'img/nfts/Nft2.png';
-import Nft3 from 'img/nfts/Nft3.png';
-import Nft4 from 'img/nfts/Nft4.png';
-import Nft5 from 'img/nfts/Nft5.png';
-import Nft6 from 'img/nfts/Nft6.png';
-import Avatar1 from 'img/avatars/avatar1.png';
-import Avatar2 from 'img/avatars/avatar2.png';
-import Avatar3 from 'img/avatars/avatar3.png';
-import Avatar4 from 'img/avatars/avatar4.png';
-import AdminLayout from 'layouts/admin';
-
-export default function NftMarketplace() {
-  // Chakra Color Mode
+const RemindersPage = () => {
   const textColor = useColorModeValue('secondaryGray.900', 'white');
   const textColorBrand = useColorModeValue('brand.500', 'white');
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [editReminderId, setEditReminderId] = useState<number | null>(null);
+
+  const [reminderText, setReminderText] = useState('');
+  const [reminderTime, setReminderTime] = useState('');
+  const [priority, setPriority] = useState('Medium');
+  const [status, setStatus] = useState('Pending');
+  const [repeat, setRepeat] = useState('None');
+  const [category, setCategory] = useState('');
+  const [project, setProject] = useState('');
+  const [description, setDescription] = useState('');
+
+  const toast = useToast();
+
+  const handleAddReminder = () => {
+    if (reminderText.trim() === '' || !reminderTime) return;
+
+    const newReminder: Reminder = {
+      id: Date.now(),
+      text: reminderText,
+      completed: false,
+      reminderTime: reminderTime,
+      priority: priority,
+      status: status,
+      repeat: repeat,
+      category: category,
+      project: project,
+      description: description,
+    };
+
+    if (editReminderId) {
+      // Editing existing reminder
+      setReminders(prevReminders =>
+        prevReminders.map(reminder =>
+          reminder.id === editReminderId ? { ...newReminder, id: editReminderId } : reminder
+        )
+      );
+      setEditReminderId(null);
+    } else {
+      setReminders(prevReminders => [...prevReminders, newReminder]);
+    }
+
+    closeModal();
+    resetForm();
+  };
+
+  const handleEditReminder = (reminder: Reminder) => {
+    setReminderText(reminder.text);
+    setReminderTime(reminder.reminderTime);
+    setPriority(reminder.priority);
+    setStatus(reminder.status);
+    setRepeat(reminder.repeat);
+    setCategory(reminder.category);
+    setProject(reminder.project);
+    setDescription(reminder.description);
+    setEditReminderId(reminder.id);
+    openModal();
+  };
+
+  const toggleCompleted = (id: number) => {
+    setReminders(prevReminders =>
+      prevReminders.map(reminder =>
+        reminder.id === id ? { ...reminder, completed: !reminder.completed } : reminder
+      )
+    );
+  };
+
+  const handleDeleteReminder = (id: number) => {
+    setReminders(prevReminders => prevReminders.filter(reminder => reminder.id !== id));
+  };
+
+  const resetForm = () => {
+    setReminderText('');
+    setReminderTime('');
+    setPriority('Medium');
+    setStatus('Pending');
+    setRepeat('None');
+    setCategory('');
+    setProject('');
+    setDescription('');
+  };
+
+  const openModal = () => setIsOpen(true);
+  const closeModal = () => {
+    setIsOpen(false);
+    resetForm();
+  };
+
+  // Calculate statistics
+  const total = reminders.length;
+  const completed = reminders.filter(reminder => reminder.completed).length;
+  const pending = total - completed;
+  const upcoming = reminders.filter(reminder => new Date(reminder.reminderTime) > new Date() && !reminder.completed).length;
+
   return (
     <Box pt={{ base: '180px', md: '80px', xl: '80px' }}>
-      {/* Main Fields */}
       <Grid
         mb="20px"
         gridTemplateColumns={{ xl: 'repeat(3, 1fr)', '2xl': '1fr 0.46fr' }}
         gap={{ base: '20px', xl: '20px' }}
         display={{ base: 'block', xl: 'grid' }}
-      >
-        <Flex
+      >  <Flex
           flexDirection="column"
           gridArea={{ xl: '1 / 1 / 2 / 3', '2xl': '1 / 1 / 2 / 2' }}
         >
           {/* <Banner /> */}
           <Flex direction="column">
-            <Flex
-              mt="45px"
-              mb="20px"
-              justifyContent="space-between"
-              direction={{ base: 'column', md: 'row' }}
-              align={{ base: 'start', md: 'center' }}
-            >
-              <Text color={textColor} fontSize="2xl" ms="24px" fontWeight="700">
-                Trending NFTs
-              </Text>
-              <Flex
-                align="center"
-                me="20px"
-                ms={{ base: '24px', md: '0px' }}
-                mt={{ base: '20px', md: '0px' }}
-              >
-                <Link
-                  href="#art"
-                  color={textColorBrand}
-                  fontWeight="500"
-                  me={{ base: '34px', md: '44px' }}
-                >
-                  Art
-                </Link>
-                <Link
-                  href="#music"
-                  color={textColorBrand}
-                  fontWeight="500"
-                  me={{ base: '34px', md: '44px' }}
-                >
-                  Music
-                </Link>
-                <Link
-                  href="#collectibles"
-                  color={textColorBrand}
-                  fontWeight="500"
-                  me={{ base: '34px', md: '44px' }}
-                >
-                  Collectibles
-                </Link>
-                <Link href="#sports" color={textColorBrand} fontWeight="500">
-                  Sports
-                </Link>
-              </Flex>
-            </Flex>
-            <SimpleGrid columns={{ base: 1, md: 3 }} gap="20px">
-              <NFT
-                name="Abstract Colors"
-                author="By Esthera Jackson"
-                bidders={[
-                  Avatar1,
-                  Avatar2,
-                  Avatar3,
-                  Avatar4,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                ]}
-                image={Nft1}
-                currentbid="0.91 ETH"
-                download="#"
-              />
-              <NFT
-                name="ETH AI Brain"
-                author="By Nick Wilson"
-                bidders={[
-                  Avatar1,
-                  Avatar2,
-                  Avatar3,
-                  Avatar4,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                ]}
-                image={Nft2}
-                currentbid="0.91 ETH"
-                download="#"
-              />
-              <NFT
-                name="Mesh Gradients "
-                author="By Will Smith"
-                bidders={[
-                  Avatar1,
-                  Avatar2,
-                  Avatar3,
-                  Avatar4,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                ]}
-                image={Nft3}
-                currentbid="0.91 ETH"
-                download="#"
-              />
-            </SimpleGrid>
-            <Text
-              mt="45px"
-              mb="36px"
-              color={textColor}
-              fontSize="2xl"
-              ms="24px"
-              fontWeight="700"
-            >
-              Recently Added
-            </Text>
-            <SimpleGrid
-              columns={{ base: 1, md: 3 }}
-              gap="20px"
-              mb={{ base: '20px', xl: '0px' }}
-            >
-              <NFT
-                name="Swipe Circles"
-                author="By Peter Will"
-                bidders={[
-                  Avatar1,
-                  Avatar2,
-                  Avatar3,
-                  Avatar4,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                ]}
-                image={Nft4}
-                currentbid="0.91 ETH"
-                download="#"
-              />
-              <NFT
-                name="Colorful Heaven"
-                author="By Mark Benjamin"
-                bidders={[
-                  Avatar1,
-                  Avatar2,
-                  Avatar3,
-                  Avatar4,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                ]}
-                image={Nft5}
-                currentbid="0.91 ETH"
-                download="#"
-              />
-              <NFT
-                name="3D Cubes Art"
-                author="By Manny Gates"
-                bidders={[
-                  Avatar1,
-                  Avatar2,
-                  Avatar3,
-                  Avatar4,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                ]}
-                image={Nft6}
-                currentbid="0.91 ETH"
-                download="#"
-              />
-            </SimpleGrid>
+          </Flex> 
+          {/* Mini Statistics and Simple Grid */}
+          <MiniStatistics total={total} completed={completed} pending={pending} upcoming={upcoming} />
+          <SimpleGridComponent total={total} completed={completed} pending={pending} />
+          {/* Reminder List */}
+          <ReminderList
+            reminders={reminders}
+            toggleCompleted={toggleCompleted}
+            handleEditReminder={handleEditReminder}
+            handleDeleteReminder={handleDeleteReminder}
+          />
+          <Flex
+            mt="45px"
+            mb="20px"
+            justifyContent="space-between"
+            direction={{ base: 'column', md: 'row' }}
+            align={{ base: 'start', md: 'center' }}
+          > 
+            <Button colorScheme="teal" onClick={openModal} mb={4}>
+              Add Reminder
+            </Button>
           </Flex>
-        </Flex>
-        <Flex
-          flexDirection="column"
-          gridArea={{ xl: '1 / 3 / 2 / 4', '2xl': '1 / 2 / 2 / 3' }}
-        >
-          <Card px="0px" mb="20px">
-            <TableTopCreators tableData={tableDataTopCreators} />
-          </Card>
-          <Card p="0px">
-            <Flex
-              align={{ sm: 'flex-start', lg: 'center' }}
-              justify="space-between"
-              w="100%"
-              px="22px"
-              py="18px"
-            >
-              <Text color={textColor} fontSize="xl" fontWeight="600">
-                History
-              </Text>
-              <Button variant="action">See all</Button>
-            </Flex>
 
-            <HistoryItem
-              name="Colorful Heaven"
-              author="By Mark Benjamin"
-              date="30s ago"
-              image={Nft5}
-              price="0.91 ETH"
-            />
-            <HistoryItem
-              name="Abstract Colors"
-              author="By Esthera Jackson"
-              date="58s ago"
-              image={Nft1}
-              price="0.91 ETH"
-            />
-            <HistoryItem
-              name="ETH AI Brain"
-              author="By Nick Wilson"
-              date="1m ago"
-              image={Nft2}
-              price="0.91 ETH"
-            />
-            <HistoryItem
-              name="Swipe Circles"
-              author="By Peter Will"
-              date="1m ago"
-              image={Nft4}
-              price="0.91 ETH"
-            />
-            <HistoryItem
-              name="Mesh Gradients "
-              author="By Will Smith"
-              date="2m ago"
-              image={Nft3}
-              price="0.91 ETH"
-            />
-            <HistoryItem
-              name="3D Cubes Art"
-              author="By Manny Gates"
-              date="3m ago"
-              image={Nft6}
-              price="0.91 ETH"
-            />
-          </Card>
+          {/* Modal for adding/editing reminder */}
+          <Modal isOpen={isOpen} onClose={closeModal}>
+            <ModalOverlay />
+            <ModalContent>
+              <ModalHeader>{editReminderId ? 'Edit Reminder' : 'Add Reminder'}</ModalHeader>
+              <ModalCloseButton />
+              <ModalBody>
+                <Input
+                  placeholder="Enter reminder text..."
+                  value={reminderText}
+                  onChange={(e) => setReminderText(e.target.value)}
+                />
+                <Input
+                  type="datetime-local"
+                  value={reminderTime}
+                  onChange={(e) => setReminderTime(e.target.value)}
+                />
+                <Select
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
+                >
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </Select>
+                <Select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Completed">Completed</option>
+                </Select>
+                <Select
+                  value={repeat}
+                  onChange={(e) => setRepeat(e.target.value)}
+                >
+                  <option value="None">None</option>
+                  <option value="Daily">Daily</option>
+                  <option value="Weekly">Weekly</option>
+                  <option value="Monthly">Monthly</option>
+                </Select>
+                <Input
+                  placeholder="Category (e.g., Work, Personal)"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                />
+                <Input
+                  placeholder="Project (e.g., Project A)"
+                  value={project}
+                  onChange={(e) => setProject(e.target.value)}
+                />
+                <Textarea
+                  placeholder="Description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </ModalBody>
+              <ModalFooter>
+                <Button colorScheme="teal" onClick={handleAddReminder}>
+                  {editReminderId ? 'Save Changes' : 'Add Reminder'}
+                </Button>
+                <Button variant="ghost" onClick={closeModal} ml={3}>
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
         </Flex>
       </Grid>
-      {/* Delete Product */}
     </Box>
+
   );
-}
+};
+
+export default RemindersPage;

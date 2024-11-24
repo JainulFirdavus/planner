@@ -4,7 +4,7 @@ import {
   MdPerson,
   MdHome,
   MdLock,
-  MdOutlineShoppingCart,
+  MdOutlineShoppingCart,MdAssignment,MdAvTimer
 } from 'react-icons/md';
 
 // Admin Imports
@@ -23,12 +23,12 @@ const routes: IRoute[] = [
     name: 'Dashboard',
     layout: '/admin',
     path: '/default',
-    icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
+    icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />, 
   },
   {
     name: 'Worklist',
     layout: '/admin', 
-    path: '/worklist/overview',
+    path: '/worklist',
     icon: (
       <Icon
         as={MdOutlineShoppingCart}
@@ -38,8 +38,19 @@ const routes: IRoute[] = [
       />
     ),
     secondary: true,
-    nestedItems: [ { name: 'OverView', path: '/worklist/overview', }, { name: 'Todo' , path: '/worklist/todos', },{ name: 'Reminder', path: '/worklist/reminders', } ],
-
+    hasSubMenu: true,
+    nestedItems: [
+      {
+        name: 'Todo',
+        path: '/todos',
+        icon:  <Icon as={MdAssignment} width="20px" height="20px" color="inherit" />,
+      },
+      {
+        name: 'Reminder',
+        path: '/reminders',
+        icon:  <Icon as={MdAvTimer} width="20px" height="20px" color="inherit" />,
+      },
+    ],
   },
   {
     name: 'Settings',

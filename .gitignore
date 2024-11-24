@@ -12,7 +12,6 @@ yarn-error.log*
 node_modules/
 .babel_cache/
 .cache/
-
 # Output directories
 .next/
 out/
@@ -26,6 +25,8 @@ out/
 # Next.js build output
 .next/
 out/
+dist/
+
 
 # OS generated files
 .DS_Store

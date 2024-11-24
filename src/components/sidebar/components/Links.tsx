@@ -1,8 +1,14 @@
 /* eslint-disable */
-
+import {useState} from 'react'
 // chakra imports
-import { Box, Flex, HStack, Text, useColorModeValue, Collapse, useDisclosure, IconButton } from '@chakra-ui/react';
-import Link from 'next/link';
+import { Box, Flex, HStack, Text, useColorModeValue, Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionIcon,
+  AccordionPanel,Collapse, useDisclosure, IconButton,
+ Button,  Heading, List, ListItem
+} from '@chakra-ui/react';
+import Link from 'next/link'; 
 import { IRoute } from 'types/navigation';
 import { usePathname } from 'next/navigation';
 import { useCallback } from 'react';
@@ -12,6 +18,13 @@ interface SidebarLinksProps {
 }
 
 export function SidebarLinks(props: SidebarLinksProps) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  // Function to handle submenu toggle
+  const toggleSubMenu = (path: string) => {
+    setExpanded(expanded === path ? null : path); // Toggle open/close
+  };
+
   const { routes } = props;
 
   //   Chakra color mode
@@ -34,6 +47,8 @@ export function SidebarLinks(props: SidebarLinksProps) {
     [pathname],
   );
 
+
+
   // this function creates the links from the secondary accordions (for example auth -> sign-in -> default)
   const createLinks = (routes: IRoute[]) => {
     const { isOpen, onToggle } = useDisclosure()
@@ -42,11 +57,110 @@ export function SidebarLinks(props: SidebarLinksProps) {
         route.layout === '/admin' ||
         route.layout === '/auth'
         
-      ) { 
+      ) {  
+        return (  
+         
+            <Box key={index}>
+              {/* Main route link */}
+              <Link href={route.layout + route.path}>
+              <Box>
+              <HStack
+                spacing={
+                  activeRoute(route.path?.toLowerCase()) ? '22px' : '26px'
+                }
+                py="5px"
+                ps="10px"
+                onClick={() => route.hasSubMenu && toggleSubMenu(route.path)} // Toggle submenu on click
+              >
+                <Flex w="100%" alignItems="center" justifyContent="center">
+                  <Box
+                    color={
+                      activeRoute(route.path?.toLowerCase())
+                        ? activeIcon
+                        : textColor
+                    }
+                    me="18px"
+                  >
+                    {route.icon}
+                  </Box>
+                  <Text
+                    me="auto"
+                    color={
+                      activeRoute(route.path?.toLowerCase())
+                        ? activeColor
+                        : textColor
+                    }
+                    fontWeight={
+                      activeRoute(route.path?.toLowerCase()) ? 'bold' : 'normal'
+                    }
+                  >
+                    {route.name}
+                  </Text>
+                </Flex>
+                <Box
+                  h="36px"
+                  w="4px"
+                  bg={
+                    activeRoute(route.path?.toLowerCase())
+                      ? brandColor
+                      : 'transparent'
+                  }
+                  borderRadius="5px"
+                />
+              </HStack>
+            </Box>
+          </Link>
 
-        return (
-          <Link key={index} href={route.layout + route.path }>
-            {route.icon ? (
+          {/* If the route has subMenu, render it here */}
+            {route.hasSubMenu && route.nestedItems && (
+            
+            
+            <Collapse in={ activeRoute(route.path)}> 
+              <Box pl="20px" py="3px">
+                {route.nestedItems.map((subRoute, subIndex) => (
+                  <Link key={subIndex} href={route.layout+route.path + subRoute.path}>
+                     <Flex w="100%" alignItems="center" justifyContent="center">
+                  <Box
+                    color={
+                      activeRoute((route.layout+route.path + subRoute.path)?.toLowerCase())
+                        ? activeIcon
+                        : textColor
+                    }
+                    me="18px"
+                  >
+                    {subRoute.icon}
+                  </Box>
+                  <Text  py="5px"
+                    me="auto"
+                    color={
+                      activeRoute((route.layout+route.path + subRoute.path)?.toLowerCase())
+                        ? activeColor
+                        : textColor
+                    }
+                    fontWeight={
+                      activeRoute((route.layout+route.path + subRoute.path)?.toLowerCase()) ? 'bold' : 'normal'
+                    }
+                  >
+                    {subRoute.name}
+                  </Text>
+                  <Box
+                  h="36px"
+                  w="4px"
+                  bg={
+                    activeRoute((route.layout+route.path + subRoute.path)?.toLowerCase()) 
+                      ? brandColor
+                      : 'transparent'
+                  }
+                  borderRadius="5px"
+                />
+                </Flex>
+                  </Link>
+                ))}
+              </Box>
+            </Collapse>
+          )}
+        </Box>
+       /*     <Link key={index} href={route.layout + route.path }> 
               <Box>
                 <HStack
                   spacing={
@@ -82,8 +196,7 @@ export function SidebarLinks(props: SidebarLinksProps) {
                       {route.name}
 
                     </Text>
-                    {route.nestedItems && (<IconButton icon={isOpen ? <ChevronDownIcon /> : <ChevronRightIcon />} size="sm" variant="ghost" aria-label="Toggle Navigation" onClick={onToggle} />)}
-
+                  
                   </Flex>
                   <Box
                     h="36px"
@@ -94,71 +207,10 @@ export function SidebarLinks(props: SidebarLinksProps) {
                         : 'transparent'
                     }
                     borderRadius="5px"
-                  />
-
-                </HStack> 
-
-                {route.nestedItems && (<Collapse in={isOpen} animateOpacity>
-                  <Box pl={4}>
-                    {route.nestedItems.map((item, indexj) => (
-                      <Link key={indexj} href={route.layout + item.path}> 
-                        <Box>
-                          <HStack
-                            spacing={
-                              activeRoute(item.name.toLowerCase()) ? '22px' : '26px'
-                            }
-                            py="5px"
-                            ps="10px"
-                          >
-                            <Text
-                              me="auto"
-                              color={
-                                activeRoute(item.name.toLowerCase())
-                                  ? activeColor
-                                  : inactiveColor
-                              }
-                              fontWeight={
-                                activeRoute(item.name.toLowerCase()) ? 'bold' : 'normal'
-                              }
-                            >
-                              {item.name}
-                            </Text>
-                            <Box h="36px" w="4px" bg="brand.400" borderRadius="5px" />
-                          </HStack>
-                        </Box>
-                      </Link>
-                    ))}
-                  </Box>
-                </Collapse>
-                )}
-              </Box>
-            ) : (
-              <Box>
-                <HStack
-                  spacing={
-                    activeRoute(route.path.toLowerCase()) ? '22px' : '26px'
-                  }
-                  py="5px"
-                  ps="10px"
-                >
-                  <Text
-                    me="auto"
-                    color={
-                      activeRoute(route.path.toLowerCase())
-                        ? activeColor
-                        : inactiveColor
-                    }
-                    fontWeight={
-                      activeRoute(route.path.toLowerCase()) ? 'bold' : 'normal'
-                    }
-                  >
-                    {route.name}
-                  </Text>
-                  <Box h="36px" w="4px" bg="brand.400" borderRadius="5px" />
-                </HStack>
-              </Box>
-            )}
-          </Link>
+                  /> 
+                </HStack>  
+              </Box> 
+          </Link>   */
         );
       }
     });

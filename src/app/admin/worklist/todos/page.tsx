@@ -1,293 +1,458 @@
-'use client';
+"use client"
 
+import React, { useState } from 'react';
+import { ChakraProvider, Box, Button, Input, SimpleGrid, Text, VStack, useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter } from '@chakra-ui/react';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
-import React from 'react';
+const ItemTypes = {
+  TODO_ITEM: 'TODO_ITEM'
+};
 
-// Chakra imports
-import {
-  Box,
-  Button,
-  Flex,
-  Grid,
-  Text,
-  useColorModeValue,
-  SimpleGrid,
-  Link,
-} from '@chakra-ui/react';
+const KanbanBoard = () => {
+  const toast = useToast();
+  const [todos, setTodos] = useState({
+    todo: [],
+    inProgress: [],
+    completed: []
+  });
+  const [newTask, setNewTask] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-// Custom components
-import TableTopCreators from 'views/admin/marketplace/components/TableTopCreators';
-import HistoryItem from 'views/admin/marketplace/components/HistoryItem';
-import NFT from 'components/card/NFT';
-import Card from 'components/card/Card';
-import tableDataTopCreators from 'views/admin/marketplace/variables/tableDataTopCreators';
+  // Add a new task to the "To Do" list
+  const addTodo = () => {
+    if (!newTask) {
+      toast({
+        title: "Task name cannot be empty.",
+        status: "error",
+        duration: 2000,
+        isClosable: true
+      });
+      return;
+    }
 
-// Assets
-import Nft1 from 'img/nfts/Nft1.png';
-import Nft2 from 'img/nfts/Nft2.png';
-import Nft3 from 'img/nfts/Nft3.png';
-import Nft4 from 'img/nfts/Nft4.png';
-import Nft5 from 'img/nfts/Nft5.png';
-import Nft6 from 'img/nfts/Nft6.png';
-import Avatar1 from 'img/avatars/avatar1.png';
-import Avatar2 from 'img/avatars/avatar2.png';
-import Avatar3 from 'img/avatars/avatar3.png';
-import Avatar4 from 'img/avatars/avatar4.png';
-import AdminLayout from 'layouts/admin';
+    setTodos({
+      ...todos,
+      todo: [...todos.todo, { id: Date.now(), text: newTask, status: 'todo' }]
+    });
+    setNewTask('');
+    setIsModalOpen(false);
+  };
 
-export default function NftMarketplace() {
-  // Chakra Color Mode
-  const textColor = useColorModeValue('secondaryGray.900', 'white');
-  const textColorBrand = useColorModeValue('brand.500', 'white');
+  // Move task between different columns
+  const moveTask = (itemId, fromColumn, toColumn) => {
+    const item = todos[fromColumn].find(task => task.id === itemId);
+    const newFromColumn = todos[fromColumn].filter(task => task.id !== itemId);
+    const newToColumn = [...todos[toColumn], { ...item, status: toColumn }];
+
+    setTodos({
+      ...todos,
+      [fromColumn]: newFromColumn,
+      [toColumn]: newToColumn
+    });
+  };
+
+  // Edit task text
+  const editTask = (itemId, newText, column) => {
+    const updatedTasks = todos[column].map(task =>
+      task.id === itemId ? { ...task, text: newText } : task
+    );
+    setTodos({ ...todos, [column]: updatedTasks });
+  };
+
+  // Delete a task
+  const deleteTask = (itemId, column) => {
+    const updatedTasks = todos[column].filter(task => task.id !== itemId);
+    setTodos({ ...todos, [column]: updatedTasks });
+  };
+
   return (
     <Box pt={{ base: '180px', md: '80px', xl: '80px' }}>
-      {/* Main Fields */}
-      <Grid
-        mb="20px"
-        gridTemplateColumns={{ xl: 'repeat(3, 1fr)', '2xl': '1fr 0.46fr' }}
-        gap={{ base: '20px', xl: '20px' }}
-        display={{ base: 'block', xl: 'grid' }}
-      >
-        <Flex
-          flexDirection="column"
-          gridArea={{ xl: '1 / 1 / 2 / 3', '2xl': '1 / 1 / 2 / 2' }}
-        >
-          {/* <Banner /> */}
-          <Flex direction="column">
-            <Flex
-              mt="45px"
-              mb="20px"
-              justifyContent="space-between"
-              direction={{ base: 'column', md: 'row' }}
-              align={{ base: 'start', md: 'center' }}
-            >
-              <Text color={textColor} fontSize="2xl" ms="24px" fontWeight="700">
-                Trending NFTs
-              </Text>
-              <Flex
-                align="center"
-                me="20px"
-                ms={{ base: '24px', md: '0px' }}
-                mt={{ base: '20px', md: '0px' }}
-              >
-                <Link
-                  href="#art"
-                  color={textColorBrand}
-                  fontWeight="500"
-                  me={{ base: '34px', md: '44px' }}
-                >
-                  Art
-                </Link>
-                <Link
-                  href="#music"
-                  color={textColorBrand}
-                  fontWeight="500"
-                  me={{ base: '34px', md: '44px' }}
-                >
-                  Music
-                </Link>
-                <Link
-                  href="#collectibles"
-                  color={textColorBrand}
-                  fontWeight="500"
-                  me={{ base: '34px', md: '44px' }}
-                >
-                  Collectibles
-                </Link>
-                <Link href="#sports" color={textColorBrand} fontWeight="500">
-                  Sports
-                </Link>
-              </Flex>
-            </Flex>
-            <SimpleGrid columns={{ base: 1, md: 3 }} gap="20px">
-              <NFT
-                name="Abstract Colors"
-                author="By Esthera Jackson"
-                bidders={[
-                  Avatar1,
-                  Avatar2,
-                  Avatar3,
-                  Avatar4,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                ]}
-                image={Nft1}
-                currentbid="0.91 ETH"
-                download="#"
-              />
-              <NFT
-                name="ETH AI Brain"
-                author="By Nick Wilson"
-                bidders={[
-                  Avatar1,
-                  Avatar2,
-                  Avatar3,
-                  Avatar4,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                ]}
-                image={Nft2}
-                currentbid="0.91 ETH"
-                download="#"
-              />
-              <NFT
-                name="Mesh Gradients "
-                author="By Will Smith"
-                bidders={[
-                  Avatar1,
-                  Avatar2,
-                  Avatar3,
-                  Avatar4,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                ]}
-                image={Nft3}
-                currentbid="0.91 ETH"
-                download="#"
-              />
-            </SimpleGrid>
-            <Text
-              mt="45px"
-              mb="36px"
-              color={textColor}
-              fontSize="2xl"
-              ms="24px"
-              fontWeight="700"
-            >
-              Recently Added
-            </Text>
-            <SimpleGrid
-              columns={{ base: 1, md: 3 }}
-              gap="20px"
-              mb={{ base: '20px', xl: '0px' }}
-            >
-              <NFT
-                name="Swipe Circles"
-                author="By Peter Will"
-                bidders={[
-                  Avatar1,
-                  Avatar2,
-                  Avatar3,
-                  Avatar4,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                ]}
-                image={Nft4}
-                currentbid="0.91 ETH"
-                download="#"
-              />
-              <NFT
-                name="Colorful Heaven"
-                author="By Mark Benjamin"
-                bidders={[
-                  Avatar1,
-                  Avatar2,
-                  Avatar3,
-                  Avatar4,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                ]}
-                image={Nft5}
-                currentbid="0.91 ETH"
-                download="#"
-              />
-              <NFT
-                name="3D Cubes Art"
-                author="By Manny Gates"
-                bidders={[
-                  Avatar1,
-                  Avatar2,
-                  Avatar3,
-                  Avatar4,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                  Avatar1,
-                ]}
-                image={Nft6}
-                currentbid="0.91 ETH"
-                download="#"
-              />
-            </SimpleGrid>
-          </Flex>
-        </Flex>
-        <Flex
-          flexDirection="column"
-          gridArea={{ xl: '1 / 3 / 2 / 4', '2xl': '1 / 2 / 2 / 3' }}
-        >
-          <Card px="0px" mb="20px">
-            <TableTopCreators tableData={tableDataTopCreators} />
-          </Card>
-          <Card p="0px">
-            <Flex
-              align={{ sm: 'flex-start', lg: 'center' }}
-              justify="space-between"
-              w="100%"
-              px="22px"
-              py="18px"
-            >
-              <Text color={textColor} fontSize="xl" fontWeight="600">
-                History
-              </Text>
-              <Button variant="action">See all</Button>
-            </Flex>
 
-            <HistoryItem
-              name="Colorful Heaven"
-              author="By Mark Benjamin"
-              date="30s ago"
-              image={Nft5}
-              price="0.91 ETH"
+      <DndProvider backend={HTML5Backend}>
+        <Box p={6}>
+          <VStack spacing={4} align="stretch" mb={6}>
+            {/* "To-Do" Button to open modal */}
+            <Button colorScheme="teal" onClick={() => setIsModalOpen(true)} w="200px" mb={6}>
+              Add New Task
+            </Button>
+          </VStack>
+
+          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
+            <KanbanColumn
+              title="To Do"
+              tasks={todos.todo}
+              moveTask={moveTask}
+              editTask={editTask}
+              deleteTask={deleteTask}
+              column="todo"
+              moveOptions
             />
-            <HistoryItem
-              name="Abstract Colors"
-              author="By Esthera Jackson"
-              date="58s ago"
-              image={Nft1}
-              price="0.91 ETH"
+            <KanbanColumn
+              title="In Progress"
+              tasks={todos.inProgress}
+              moveTask={moveTask}
+              editTask={editTask}
+              deleteTask={deleteTask}
+              column="inProgress"
+              moveOptions
             />
-            <HistoryItem
-              name="ETH AI Brain"
-              author="By Nick Wilson"
-              date="1m ago"
-              image={Nft2}
-              price="0.91 ETH"
+            <KanbanColumn
+              title="Completed"
+              tasks={todos.completed}
+              moveTask={moveTask}
+              editTask={editTask}
+              deleteTask={deleteTask}
+              column="completed"
+              moveOptions
             />
-            <HistoryItem
-              name="Swipe Circles"
-              author="By Peter Will"
-              date="1m ago"
-              image={Nft4}
-              price="0.91 ETH"
-            />
-            <HistoryItem
-              name="Mesh Gradients "
-              author="By Will Smith"
-              date="2m ago"
-              image={Nft3}
-              price="0.91 ETH"
-            />
-            <HistoryItem
-              name="3D Cubes Art"
-              author="By Manny Gates"
-              date="3m ago"
-              image={Nft6}
-              price="0.91 ETH"
-            />
-          </Card>
-        </Flex>
-      </Grid>
-      {/* Delete Product */}
+          </SimpleGrid>
+
+          {/* Modal to Add Task */}
+          <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+            <ModalOverlay />
+            <ModalContent>
+              <ModalHeader>Add New Task</ModalHeader>
+              <ModalCloseButton />
+              <ModalBody>
+                <Input
+                  placeholder="Task Description"
+                  value={newTask}
+                  onChange={(e) => setNewTask(e.target.value)}
+                />
+              </ModalBody>
+
+              <ModalFooter>
+                <Button variant="ghost" onClick={() => setIsModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button colorScheme="teal" ml={3} onClick={addTodo}>
+                  Add Task
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
+        </Box>
+      </DndProvider>
     </Box>
   );
-}
+};
+
+const KanbanColumn = ({ title, tasks, moveTask, editTask, deleteTask, column, moveOptions }) => {
+  const [{ isOver }, drop] = useDrop({
+    accept: ItemTypes.TODO_ITEM,
+    drop: (item) => moveTask(item.id, item.fromColumn, column),
+    collect: (monitor) => ({
+      isOver: monitor.isOver()
+    })
+  });
+
+  return (
+    <Box
+      ref={drop}
+      p={4}
+      borderWidth={2}
+      borderRadius="lg"
+      bg="gray.50"
+      minHeight="400px"
+      boxShadow="md"
+      _hover={{ boxShadow: 'lg', transition: 'box-shadow 0.3s ease' }}
+      borderColor="gray.300"
+    >
+      <Text fontSize="xl" fontWeight="bold" mb={4} color="teal.600">{title}</Text>
+      {tasks.length === 0 ? (
+        <Text color="gray.500">No tasks available</Text>
+      ) : (
+        tasks.map((task) => (
+          <KanbanTask
+            key={task.id}
+            task={task}
+            moveTask={moveTask}
+            editTask={editTask}
+            deleteTask={deleteTask}
+            column={column}
+            moveOptions={moveOptions}
+          />
+        ))
+      )}
+    </Box>
+  );
+};
+
+const KanbanTask = ({ task, moveTask, editTask, deleteTask, column, moveOptions }) => {
+  const [, drag] = useDrag({
+    type: ItemTypes.TODO_ITEM,
+    item: { id: task.id, fromColumn: column }
+  });
+
+  return (
+    <Box
+      ref={drag}
+      mb={3}
+      p={3}
+      borderWidth={1}
+      borderRadius="md"
+      bg="teal.100"
+      color="black"
+      display="flex"
+      justifyContent="space-between"
+      alignItems="center"
+      boxShadow="sm"
+      _hover={{ bg: 'teal.200', cursor: 'move' }}
+    >
+      <Text>{task.text}</Text>
+      <Box>
+        <Button
+          size="sm"
+          colorScheme="teal"
+          onClick={() => editTask(task.id, prompt('Edit Task:', task.text), column)}
+          variant="outline"
+        >
+          Edit
+        </Button>
+        <Button
+          size="sm"
+          colorScheme="red"
+          ml={2}
+          onClick={() => deleteTask(task.id, column)}
+          variant="outline"
+        >
+          Delete
+        </Button>
+        {moveOptions && column !== "completed" && (
+          <Button
+            size="sm"
+            colorScheme="blue"
+            ml={2}
+            onClick={() => moveTask(task.id, column, column === "todo" ? "inProgress" : "completed")}
+            variant="outline"
+          >
+            Move {column === "todo" ? "To In Progress" : "To Completed"}
+          </Button>
+        )}
+      </Box>
+    </Box>
+  );
+};
+
+export default KanbanBoard;
+
+/*
+import React, { useState } from 'react';
+import { ChakraProvider, Box, Button, Input, SimpleGrid, Text, VStack, useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter } from '@chakra-ui/react';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+
+const ItemTypes = {
+  TODO_ITEM: 'TODO_ITEM'
+};
+
+const KanbanBoard = () => {
+  const toast = useToast();
+  const [todos, setTodos] = useState({
+    todo: [],
+    inProgress: [],
+    completed: []
+  });
+  const [newTask, setNewTask] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Add a new task to the "To Do" list
+  const addTodo = () => {
+    if (!newTask) {
+      toast({
+        title: "Task name cannot be empty.",
+        status: "error",
+        duration: 2000,
+        isClosable: true
+      });
+      return;
+    }
+
+    setTodos({
+      ...todos,
+      todo: [...todos.todo, { id: Date.now(), text: newTask, status: 'todo' }]
+    });
+    setNewTask('');
+    setIsModalOpen(false);
+  };
+
+  // Move task between different columns
+  const moveTask = (itemId, fromColumn, toColumn) => {
+    const item = todos[fromColumn].find(task => task.id === itemId);
+    const newFromColumn = todos[fromColumn].filter(task => task.id !== itemId);
+    const newToColumn = [...todos[toColumn], { ...item, status: toColumn }];
+
+    setTodos({
+      ...todos,
+      [fromColumn]: newFromColumn,
+      [toColumn]: newToColumn
+    });
+  };
+
+  // Edit task text
+  const editTask = (itemId, newText, column) => {
+    const updatedTasks = todos[column].map(task =>
+      task.id === itemId ? { ...task, text: newText } : task
+    );
+    setTodos({ ...todos, [column]: updatedTasks });
+  };
+
+  // Delete a task
+  const deleteTask = (itemId, column) => {
+    const updatedTasks = todos[column].filter(task => task.id !== itemId);
+    setTodos({ ...todos, [column]: updatedTasks });
+  };
+
+  return (
+    <ChakraProvider>
+      <DndProvider backend={HTML5Backend}>
+        <Box p={6}>
+          <VStack spacing={4} align="stretch" mb={6}>
+            <Button colorScheme="teal" onClick={() => setIsModalOpen(true)}>
+              Add Task
+            </Button>
+          </VStack>
+
+          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
+            <KanbanColumn
+              title="To Do"
+              tasks={todos.todo}
+              moveTask={moveTask}
+              editTask={editTask}
+              deleteTask={deleteTask}
+              column="todo"
+            />
+            <KanbanColumn
+              title="In Progress"
+              tasks={todos.inProgress}
+              moveTask={moveTask}
+              editTask={editTask}
+              deleteTask={deleteTask}
+              column="inProgress"
+            />
+            <KanbanColumn
+              title="Completed"
+              tasks={todos.completed}
+              moveTask={moveTask}
+              editTask={editTask}
+              deleteTask={deleteTask}
+              column="completed"
+            />
+          </SimpleGrid>
+ 
+          <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+            <ModalOverlay />
+            <ModalContent>
+              <ModalHeader>Add New Task</ModalHeader>
+              <ModalCloseButton />
+              <ModalBody>
+                <Input
+                  placeholder="Task Description"
+                  value={newTask}
+                  onChange={(e) => setNewTask(e.target.value)}
+                />
+              </ModalBody>
+
+              <ModalFooter>
+                <Button variant="ghost" onClick={() => setIsModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button colorScheme="teal" ml={3} onClick={addTodo}>
+                  Add Task
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
+        </Box>
+      </DndProvider>
+    </ChakraProvider>
+  );
+};
+
+const KanbanColumn = ({ title, tasks, moveTask, editTask, deleteTask, column }) => {
+  const [{ isOver }, drop] = useDrop({
+    accept: ItemTypes.TODO_ITEM,
+    drop: (item) => moveTask(item.id, item.fromColumn, column),
+    collect: (monitor) => ({
+      isOver: monitor.isOver()
+    })
+  });
+
+  return (
+    <Box
+      ref={drop}
+      p={4}
+      borderWidth={2}
+      borderRadius="lg"
+      bg="gray.50"
+      minHeight="400px"
+      boxShadow="md"
+      _hover={{ boxShadow: 'lg', transition: 'box-shadow 0.3s ease' }}
+      borderColor="gray.300"
+    >
+      <Text fontSize="xl" fontWeight="bold" mb={4} color="teal.600">{title}</Text>
+      {tasks.length === 0 ? (
+        <Text color="gray.500">No tasks available</Text>
+      ) : (
+        tasks.map((task) => (
+          <KanbanTask
+            key={task.id}
+            task={task}
+            moveTask={moveTask}
+            editTask={editTask}
+            deleteTask={deleteTask}
+            column={column}
+          />
+        ))
+      )}
+    </Box>
+  );
+};
+
+const KanbanTask = ({ task, moveTask, editTask, deleteTask, column }) => {
+  const [, drag] = useDrag({
+    type: ItemTypes.TODO_ITEM,
+    item: { id: task.id, fromColumn: column }
+  });
+
+  return (
+    <Box
+      ref={drag}
+      mb={3}
+      p={3}
+      borderWidth={1}
+      borderRadius="md"
+      bg="teal.100"
+      color="black"
+      display="flex"
+      justifyContent="space-between"
+      alignItems="center"
+      boxShadow="sm"
+      _hover={{ bg: 'teal.200', cursor: 'move' }}
+    >
+      <Text>{task.text}</Text>
+      <Box>
+        <Button
+          size="sm"
+          colorScheme="teal"
+          onClick={() => editTask(task.id, prompt('Edit Task:', task.text), column)}
+          variant="outline"
+        >
+          Edit
+        </Button>
+        <Button
+          size="sm"
+          colorScheme="red"
+          ml={2}
+          onClick={() => deleteTask(task.id, column)}
+          variant="outline"
+        >
+          Delete
+        </Button>
+      </Box>
+    </Box>
+  );
+};
+
+export default KanbanBoard;*/

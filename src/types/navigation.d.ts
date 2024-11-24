@@ -7,4 +7,10 @@ export interface IRoute {
   secondary?: boolean;
   path?: string;
   nestedItems?: MenuItem[];
+  hasSubMenu?: boolean;
+}
+export interface MenuItem {
+  name: string;
+  path: string;
+  icon?: ReactNode;  // Optional icon for nested menu items
 }
