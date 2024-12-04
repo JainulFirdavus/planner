@@ -5,6 +5,7 @@ import { Container,
   Stack,
   Flex,
   Box,
+  Grid,
   Table,
   Thead,
   Tbody,
@@ -15,7 +16,7 @@ import { Container,
   Badge,
   Image,
   useDisclosure,
-  SimpleGrid,
+  SimpleGrid,useColorModeValue,
   Text} from '@chakra-ui/react';
 import { useState } from 'react';
 import { EditIcon  ,CheckIcon} from '@chakra-ui/icons';
@@ -26,6 +27,8 @@ import PaginationComponent from '../../../../components/Pagination/Pagination'; 
 const ITEMS_PER_PAGE = 5;
 
 const Home: React.FC = () => {
+  const textColor = useColorModeValue('secondaryGray.900', 'white');
+  const textColorBrand = useColorModeValue('brand.500', 'white');
   const [todos, setTodos] = useState<Todo[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
@@ -69,14 +72,18 @@ const Home: React.FC = () => {
   const pendingTodos = totalTodos - completedTodos;
 
   return (
-    <Container centerContent>
-      <Heading as="h1" mb={6}>
-        My Todo App
-      </Heading>
-
+    <Box pt={{ base: '180px', md: '80px', xl: '80px' }}>
+    <Grid
+      mb="20px"
+      gridTemplateColumns={{ xl: 'repeat(3, 1fr)', '2xl': '1fr 0.46fr' }}
+      gap={{ base: '20px', xl: '20px' }}
+      display={{ base: 'block', xl: 'grid' }}
+    >  <Flex
+        flexDirection="column"
+        gridArea={{ xl: '1 / 1 / 2 / 3', '2xl': '1 / 1 / 2 / 2' }} >
       {/* MiniStatistics Component */}
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} mb={6}>
-        <Box bg="teal.100" p={4} borderRadius="md" boxShadow="md">
+        <Box bg="brandScheme" p={4} borderRadius="md" boxShadow="md">
           <Text fontSize="lg">Total Todos</Text>
           <Text fontSize="xl" fontWeight="bold">{totalTodos}</Text>
         </Box>
@@ -99,7 +106,7 @@ const Home: React.FC = () => {
         <Table variant="striped" colorScheme="teal">
           <Thead>
             <Tr>
-              <Th>Image</Th>
+              <Th>Type</Th>
               <Th>Title</Th>
               <Th>Description</Th>
               <Th>Priority</Th>
@@ -112,12 +119,7 @@ const Home: React.FC = () => {
             {paginatedTodos.map((todo) => (
               <Tr key={todo.id}>
                 <Td>
-                  <Image
-                    boxSize="30px"
-                    objectFit="cover"
-                    src={`https://www.gravatar.com/avatar/${todo.id}?d=identicon`} // Example image
-                    alt="user"
-                  />
+                   icon
                 </Td>
                 <Td>{todo.title}</Td>
                 <Td>{todo.description}</Td>
@@ -184,8 +186,10 @@ const Home: React.FC = () => {
         addTodo={addTodo}
         editTodo={editTodo}
         existingTodo={editingTodo}
-      />
-    </Container>
+      /> 
+      </Flex>
+      </Grid>
+      </Box>
   );
 };
 
