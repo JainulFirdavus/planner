@@ -13,7 +13,7 @@ import {
 import { useState, useEffect } from 'react'
 import AdminNavbarLinks from 'components/navbar/NavbarLinksAdmin'
 import { isWindowAvailable } from 'utils/navigation'
-
+import { usePathname } from 'next/navigation';
 export default function AdminNavbar (props: {
   secondary: boolean
   message: string | boolean
@@ -34,7 +34,7 @@ export default function AdminNavbar (props: {
       }
     }
   })
-
+const currentRoute = usePathname().substring(usePathname().lastIndexOf('/') + 1); 
   const { secondary, message, brandText } = props
 
   // Here are all the props that may change depending on navbar's type or state.(secondary, variant, scrolled)
@@ -122,7 +122,7 @@ export default function AdminNavbar (props: {
 
             <BreadcrumbItem color={secondaryText} fontSize='sm'>
               <BreadcrumbLink href='#' color={secondaryText}>
-                {brandText}
+                {brandText}  
               </BreadcrumbLink>
             </BreadcrumbItem>
           </Breadcrumb>
@@ -144,7 +144,7 @@ export default function AdminNavbar (props: {
               boxShadow: 'none'
             }}
           >
-            {brandText}
+            {currentRoute.toUpperCase()}
           </Link>
         </Box>
         <Box ms='auto' w={{ sm: '100%', md: 'unset' }}>

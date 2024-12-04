@@ -3,7 +3,7 @@ import { IRoute } from "types/navigation";
 // NextJS Requirement
 export const isWindowAvailable = () => typeof window !== "undefined";
 
-export const findCurrentRoute = (routes: IRoute[]): IRoute => { 
+export const findCurrentRoute = (routes: IRoute[]): IRoute => {
   const foundRoute: IRoute = routes.find(
     (route) =>
       isWindowAvailable() &&
@@ -14,9 +14,20 @@ export const findCurrentRoute = (routes: IRoute[]): IRoute => {
   return foundRoute;
 };
 
+  function capitalizeFirstLetter(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+export const getcurrentActiveRoute = (routes: IRoute[]): string => {
+  const route = findCurrentRoute(routes); 
+  let name = route?.secondary ? capitalizeFirstLetter(window.location.href.split('/').pop())  : route?.name
+  return name || "Pages";
+};  
+
+
 export const getActiveRoute = (routes: IRoute[]): string => {
   const route = findCurrentRoute(routes);
-  return route?.name || "Default Brand Text";
+  return route?.name || "Pages";
 };
 
 export const getActiveNavbar = (routes: IRoute[]): boolean => {

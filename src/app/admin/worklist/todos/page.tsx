@@ -1,458 +1,192 @@
-"use client"
+'use client';
+import { Container,
+  Heading,
+  Button,
+  Stack,
+  Flex,
+  Box,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  IconButton,
+  Badge,
+  Image,
+  useDisclosure,
+  SimpleGrid,
+  Text} from '@chakra-ui/react';
+import { useState } from 'react';
+import { EditIcon  ,CheckIcon} from '@chakra-ui/icons';
+import AddTodoModal from '../../../../components/modal/AddTodoModal';
+import { Todo } from '../types/todo';
+import PaginationComponent from '../../../../components/Pagination/Pagination'; // Importing the pagination component
 
-import React, { useState } from 'react';
-import { ChakraProvider, Box, Button, Input, SimpleGrid, Text, VStack, useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter } from '@chakra-ui/react';
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+const ITEMS_PER_PAGE = 5;
 
-const ItemTypes = {
-  TODO_ITEM: 'TODO_ITEM'
-};
+const Home: React.FC = () => {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
-const KanbanBoard = () => {
-  const toast = useToast();
-  const [todos, setTodos] = useState({
-    todo: [],
-    inProgress: [],
-    completed: []
-  });
-  const [newTask, setNewTask] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Add a new task to the "To Do" list
-  const addTodo = () => {
-    if (!newTask) {
-      toast({
-        title: "Task name cannot be empty.",
-        status: "error",
-        duration: 2000,
-        isClosable: true
-      });
-      return;
-    }
-
-    setTodos({
-      ...todos,
-      todo: [...todos.todo, { id: Date.now(), text: newTask, status: 'todo' }]
-    });
-    setNewTask('');
-    setIsModalOpen(false);
+  const addTodo = (todo: Todo) => {
+    setTodos((prevTodos) => [...prevTodos, todo]);
   };
 
-  // Move task between different columns
-  const moveTask = (itemId, fromColumn, toColumn) => {
-    const item = todos[fromColumn].find(task => task.id === itemId);
-    const newFromColumn = todos[fromColumn].filter(task => task.id !== itemId);
-    const newToColumn = [...todos[toColumn], { ...item, status: toColumn }];
-
-    setTodos({
-      ...todos,
-      [fromColumn]: newFromColumn,
-      [toColumn]: newToColumn
-    });
-  };
-
-  // Edit task text
-  const editTask = (itemId, newText, column) => {
-    const updatedTasks = todos[column].map(task =>
-      task.id === itemId ? { ...task, text: newText } : task
+  const editTodo = (updatedTodo: Todo) => {
+    setTodos((prevTodos) =>
+      prevTodos.map((todo) => (todo.id === updatedTodo.id ? updatedTodo : todo))
     );
-    setTodos({ ...todos, [column]: updatedTasks });
   };
 
-  // Delete a task
-  const deleteTask = (itemId, column) => {
-    const updatedTasks = todos[column].filter(task => task.id !== itemId);
-    setTodos({ ...todos, [column]: updatedTasks });
+  const handleEdit = (todo: Todo) => {
+    setEditingTodo(todo);
+    onOpen();
   };
 
-  return (
-    <Box pt={{ base: '180px', md: '80px', xl: '80px' }}>
-
-      <DndProvider backend={HTML5Backend}>
-        <Box p={6}>
-          <VStack spacing={4} align="stretch" mb={6}>
-            {/* "To-Do" Button to open modal */}
-            <Button colorScheme="teal" onClick={() => setIsModalOpen(true)} w="200px" mb={6}>
-              Add New Task
-            </Button>
-          </VStack>
-
-          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
-            <KanbanColumn
-              title="To Do"
-              tasks={todos.todo}
-              moveTask={moveTask}
-              editTask={editTask}
-              deleteTask={deleteTask}
-              column="todo"
-              moveOptions
-            />
-            <KanbanColumn
-              title="In Progress"
-              tasks={todos.inProgress}
-              moveTask={moveTask}
-              editTask={editTask}
-              deleteTask={deleteTask}
-              column="inProgress"
-              moveOptions
-            />
-            <KanbanColumn
-              title="Completed"
-              tasks={todos.completed}
-              moveTask={moveTask}
-              editTask={editTask}
-              deleteTask={deleteTask}
-              column="completed"
-              moveOptions
-            />
-          </SimpleGrid>
-
-          {/* Modal to Add Task */}
-          <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-            <ModalOverlay />
-            <ModalContent>
-              <ModalHeader>Add New Task</ModalHeader>
-              <ModalCloseButton />
-              <ModalBody>
-                <Input
-                  placeholder="Task Description"
-                  value={newTask}
-                  onChange={(e) => setNewTask(e.target.value)}
-                />
-              </ModalBody>
-
-              <ModalFooter>
-                <Button variant="ghost" onClick={() => setIsModalOpen(false)}>
-                  Cancel
-                </Button>
-                <Button colorScheme="teal" ml={3} onClick={addTodo}>
-                  Add Task
-                </Button>
-              </ModalFooter>
-            </ModalContent>
-          </Modal>
-        </Box>
-      </DndProvider>
-    </Box>
-  );
-};
-
-const KanbanColumn = ({ title, tasks, moveTask, editTask, deleteTask, column, moveOptions }) => {
-  const [{ isOver }, drop] = useDrop({
-    accept: ItemTypes.TODO_ITEM,
-    drop: (item) => moveTask(item.id, item.fromColumn, column),
-    collect: (monitor) => ({
-      isOver: monitor.isOver()
-    })
-  });
-
-  return (
-    <Box
-      ref={drop}
-      p={4}
-      borderWidth={2}
-      borderRadius="lg"
-      bg="gray.50"
-      minHeight="400px"
-      boxShadow="md"
-      _hover={{ boxShadow: 'lg', transition: 'box-shadow 0.3s ease' }}
-      borderColor="gray.300"
-    >
-      <Text fontSize="xl" fontWeight="bold" mb={4} color="teal.600">{title}</Text>
-      {tasks.length === 0 ? (
-        <Text color="gray.500">No tasks available</Text>
-      ) : (
-        tasks.map((task) => (
-          <KanbanTask
-            key={task.id}
-            task={task}
-            moveTask={moveTask}
-            editTask={editTask}
-            deleteTask={deleteTask}
-            column={column}
-            moveOptions={moveOptions}
-          />
-        ))
-      )}
-    </Box>
-  );
-};
-
-const KanbanTask = ({ task, moveTask, editTask, deleteTask, column, moveOptions }) => {
-  const [, drag] = useDrag({
-    type: ItemTypes.TODO_ITEM,
-    item: { id: task.id, fromColumn: column }
-  });
-
-  return (
-    <Box
-      ref={drag}
-      mb={3}
-      p={3}
-      borderWidth={1}
-      borderRadius="md"
-      bg="teal.100"
-      color="black"
-      display="flex"
-      justifyContent="space-between"
-      alignItems="center"
-      boxShadow="sm"
-      _hover={{ bg: 'teal.200', cursor: 'move' }}
-    >
-      <Text>{task.text}</Text>
-      <Box>
-        <Button
-          size="sm"
-          colorScheme="teal"
-          onClick={() => editTask(task.id, prompt('Edit Task:', task.text), column)}
-          variant="outline"
-        >
-          Edit
-        </Button>
-        <Button
-          size="sm"
-          colorScheme="red"
-          ml={2}
-          onClick={() => deleteTask(task.id, column)}
-          variant="outline"
-        >
-          Delete
-        </Button>
-        {moveOptions && column !== "completed" && (
-          <Button
-            size="sm"
-            colorScheme="blue"
-            ml={2}
-            onClick={() => moveTask(task.id, column, column === "todo" ? "inProgress" : "completed")}
-            variant="outline"
-          >
-            Move {column === "todo" ? "To In Progress" : "To Completed"}
-          </Button>
-        )}
-      </Box>
-    </Box>
-  );
-};
-
-export default KanbanBoard;
-
-/*
-import React, { useState } from 'react';
-import { ChakraProvider, Box, Button, Input, SimpleGrid, Text, VStack, useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter } from '@chakra-ui/react';
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
-
-const ItemTypes = {
-  TODO_ITEM: 'TODO_ITEM'
-};
-
-const KanbanBoard = () => {
-  const toast = useToast();
-  const [todos, setTodos] = useState({
-    todo: [],
-    inProgress: [],
-    completed: []
-  });
-  const [newTask, setNewTask] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Add a new task to the "To Do" list
-  const addTodo = () => {
-    if (!newTask) {
-      toast({
-        title: "Task name cannot be empty.",
-        status: "error",
-        duration: 2000,
-        isClosable: true
-      });
-      return;
-    }
-
-    setTodos({
-      ...todos,
-      todo: [...todos.todo, { id: Date.now(), text: newTask, status: 'todo' }]
-    });
-    setNewTask('');
-    setIsModalOpen(false);
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
-  // Move task between different columns
-  const moveTask = (itemId, fromColumn, toColumn) => {
-    const item = todos[fromColumn].find(task => task.id === itemId);
-    const newFromColumn = todos[fromColumn].filter(task => task.id !== itemId);
-    const newToColumn = [...todos[toColumn], { ...item, status: toColumn }];
-
-    setTodos({
-      ...todos,
-      [fromColumn]: newFromColumn,
-      [toColumn]: newToColumn
-    });
-  };
-
-  // Edit task text
-  const editTask = (itemId, newText, column) => {
-    const updatedTasks = todos[column].map(task =>
-      task.id === itemId ? { ...task, text: newText } : task
+  const handleComplete = (todoId: number) => {
+    setTodos((prevTodos) =>
+      prevTodos.map((todo) =>
+        todo.id === todoId ? { ...todo, status: 'Completed' } : todo
+      )
     );
-    setTodos({ ...todos, [column]: updatedTasks });
   };
 
-  // Delete a task
-  const deleteTask = (itemId, column) => {
-    const updatedTasks = todos[column].filter(task => task.id !== itemId);
-    setTodos({ ...todos, [column]: updatedTasks });
-  };
+  const paginatedTodos = todos.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Calculate statistics
+  const totalTodos = todos.length;
+  const completedTodos = todos.filter((todo) => todo.status === 'Completed').length;
+  const pendingTodos = totalTodos - completedTodos;
 
   return (
-    <ChakraProvider>
-      <DndProvider backend={HTML5Backend}>
-        <Box p={6}>
-          <VStack spacing={4} align="stretch" mb={6}>
-            <Button colorScheme="teal" onClick={() => setIsModalOpen(true)}>
-              Add Task
-            </Button>
-          </VStack>
+    <Container centerContent>
+      <Heading as="h1" mb={6}>
+        My Todo App
+      </Heading>
 
-          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
-            <KanbanColumn
-              title="To Do"
-              tasks={todos.todo}
-              moveTask={moveTask}
-              editTask={editTask}
-              deleteTask={deleteTask}
-              column="todo"
-            />
-            <KanbanColumn
-              title="In Progress"
-              tasks={todos.inProgress}
-              moveTask={moveTask}
-              editTask={editTask}
-              deleteTask={deleteTask}
-              column="inProgress"
-            />
-            <KanbanColumn
-              title="Completed"
-              tasks={todos.completed}
-              moveTask={moveTask}
-              editTask={editTask}
-              deleteTask={deleteTask}
-              column="completed"
-            />
-          </SimpleGrid>
- 
-          <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-            <ModalOverlay />
-            <ModalContent>
-              <ModalHeader>Add New Task</ModalHeader>
-              <ModalCloseButton />
-              <ModalBody>
-                <Input
-                  placeholder="Task Description"
-                  value={newTask}
-                  onChange={(e) => setNewTask(e.target.value)}
-                />
-              </ModalBody>
-
-              <ModalFooter>
-                <Button variant="ghost" onClick={() => setIsModalOpen(false)}>
-                  Cancel
-                </Button>
-                <Button colorScheme="teal" ml={3} onClick={addTodo}>
-                  Add Task
-                </Button>
-              </ModalFooter>
-            </ModalContent>
-          </Modal>
+      {/* MiniStatistics Component */}
+      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} mb={6}>
+        <Box bg="teal.100" p={4} borderRadius="md" boxShadow="md">
+          <Text fontSize="lg">Total Todos</Text>
+          <Text fontSize="xl" fontWeight="bold">{totalTodos}</Text>
         </Box>
-      </DndProvider>
-    </ChakraProvider>
-  );
-};
+        <Box bg="green.100" p={4} borderRadius="md" boxShadow="md">
+          <Text fontSize="lg">Completed Todos</Text>
+          <Text fontSize="xl" fontWeight="bold">{completedTodos}</Text>
+        </Box>
+        <Box bg="yellow.100" p={4} borderRadius="md" boxShadow="md">
+          <Text fontSize="lg">Pending Todos</Text>
+          <Text fontSize="xl" fontWeight="bold">{pendingTodos}</Text>
+        </Box>
+      </SimpleGrid>
 
-const KanbanColumn = ({ title, tasks, moveTask, editTask, deleteTask, column }) => {
-  const [{ isOver }, drop] = useDrop({
-    accept: ItemTypes.TODO_ITEM,
-    drop: (item) => moveTask(item.id, item.fromColumn, column),
-    collect: (monitor) => ({
-      isOver: monitor.isOver()
-    })
-  });
+      <Button colorScheme="teal" onClick={onOpen} mb={6}>
+        Add New Todo
+      </Button>
 
-  return (
-    <Box
-      ref={drop}
-      p={4}
-      borderWidth={2}
-      borderRadius="lg"
-      bg="gray.50"
-      minHeight="400px"
-      boxShadow="md"
-      _hover={{ boxShadow: 'lg', transition: 'box-shadow 0.3s ease' }}
-      borderColor="gray.300"
-    >
-      <Text fontSize="xl" fontWeight="bold" mb={4} color="teal.600">{title}</Text>
-      {tasks.length === 0 ? (
-        <Text color="gray.500">No tasks available</Text>
-      ) : (
-        tasks.map((task) => (
-          <KanbanTask
-            key={task.id}
-            task={task}
-            moveTask={moveTask}
-            editTask={editTask}
-            deleteTask={deleteTask}
-            column={column}
-          />
-        ))
-      )}
-    </Box>
-  );
-};
-
-const KanbanTask = ({ task, moveTask, editTask, deleteTask, column }) => {
-  const [, drag] = useDrag({
-    type: ItemTypes.TODO_ITEM,
-    item: { id: task.id, fromColumn: column }
-  });
-
-  return (
-    <Box
-      ref={drag}
-      mb={3}
-      p={3}
-      borderWidth={1}
-      borderRadius="md"
-      bg="teal.100"
-      color="black"
-      display="flex"
-      justifyContent="space-between"
-      alignItems="center"
-      boxShadow="sm"
-      _hover={{ bg: 'teal.200', cursor: 'move' }}
-    >
-      <Text>{task.text}</Text>
-      <Box>
-        <Button
-          size="sm"
-          colorScheme="teal"
-          onClick={() => editTask(task.id, prompt('Edit Task:', task.text), column)}
-          variant="outline"
-        >
-          Edit
-        </Button>
-        <Button
-          size="sm"
-          colorScheme="red"
-          ml={2}
-          onClick={() => deleteTask(task.id, column)}
-          variant="outline"
-        >
-          Delete
-        </Button>
+      {/* Todo List Table */}
+      <Box width="100%" p={4} borderWidth={1} borderRadius="md">
+        <Table variant="striped" colorScheme="teal">
+          <Thead>
+            <Tr>
+              <Th>Image</Th>
+              <Th>Title</Th>
+              <Th>Description</Th>
+              <Th>Priority</Th>
+              <Th>Due Date</Th>
+              <Th>Status</Th>
+              <Th>Actions</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {paginatedTodos.map((todo) => (
+              <Tr key={todo.id}>
+                <Td>
+                  <Image
+                    boxSize="30px"
+                    objectFit="cover"
+                    src={`https://www.gravatar.com/avatar/${todo.id}?d=identicon`} // Example image
+                    alt="user"
+                  />
+                </Td>
+                <Td>{todo.title}</Td>
+                <Td>{todo.description}</Td>
+                <Td>
+                  <Badge
+                    colorScheme={
+                      todo.priority === 'warning'
+                        ? 'yellow'
+                        : todo.priority === 'danger'
+                        ? 'red'
+                        : 'blue'
+                    }
+                  >
+                    {todo.priority}
+                  </Badge>
+                </Td>
+                <Td>{todo.dueDate}</Td>
+                <Td>
+                  <Text
+                    fontWeight="bold"
+                    color={todo.status === 'Completed' ? 'green.500' : 'yellow.500'}
+                  >
+                    {todo.status}
+                  </Text>
+                </Td>
+                <Td>
+                  {todo.status !== 'Completed' && (
+                    <IconButton
+                      icon={<CheckIcon />}
+                      colorScheme="green"
+                      aria-label="Complete Todo"
+                      onClick={() => handleComplete(todo.id)}
+                    />
+                  )}
+                  <IconButton
+                    icon={<EditIcon />}
+                    colorScheme="blue"
+                    aria-label="Edit Todo"
+                    onClick={() => handleEdit(todo)}
+                    ml={2}
+                  />
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
       </Box>
-    </Box>
+
+      {/* Pagination Component */}
+      <PaginationComponent
+        currentPage={currentPage}
+        totalCount={todos.length}
+        pageSize={ITEMS_PER_PAGE}
+        onPageChange={handlePageChange}
+      />
+
+      {/* Add/Edit Todo Modal */}
+      <AddTodoModal
+        isOpen={isOpen}
+        onClose={() => {
+          onClose();
+          setEditingTodo(null);
+        }}
+        addTodo={addTodo}
+        editTodo={editTodo}
+        existingTodo={editingTodo}
+      />
+    </Container>
   );
 };
 
-export default KanbanBoard;*/
+export default Home;
