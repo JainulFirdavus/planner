@@ -83,15 +83,15 @@ const Home: React.FC = () => {
         gridArea={{ xl: '1 / 1 / 2 / 3', '2xl': '1 / 1 / 2 / 2' }} >
       {/* MiniStatistics Component */}
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} mb={6}>
-        <Box bg="brandScheme" p={4} borderRadius="md" boxShadow="md">
+        <Box bg="blue.400" p={4} borderRadius="md" boxShadow="md">
           <Text fontSize="lg">Total Todos</Text>
           <Text fontSize="xl" fontWeight="bold">{totalTodos}</Text>
         </Box>
-        <Box bg="green.100" p={4} borderRadius="md" boxShadow="md">
+        <Box bg="navi.100" p={4} borderRadius="md" boxShadow="md">
           <Text fontSize="lg">Completed Todos</Text>
           <Text fontSize="xl" fontWeight="bold">{completedTodos}</Text>
         </Box>
-        <Box bg="yellow.100" p={4} borderRadius="md" boxShadow="md">
+        <Box bg="gray.500" p={4} borderRadius="md" boxShadow="md">
           <Text fontSize="lg">Pending Todos</Text>
           <Text fontSize="xl" fontWeight="bold">{pendingTodos}</Text>
         </Box>
